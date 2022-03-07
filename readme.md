@@ -10,8 +10,11 @@ To Install:
 streamserv invocation:
 
     help:
-        py streamserv help
+        py streamserv.py help
 
     create the database:
-        py streamserv db create your/path
+        py streamserv.py db create your/path/here
             Note: path must be absolute
+
+    db stats:
+        py streamserv.py db stats

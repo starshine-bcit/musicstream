@@ -7,7 +7,7 @@ DBLOC = pathlib.Path('streamserv.db')
 
 # General ToDo:
 #
-# 
+# Upgrade to better args handling
 #
 #
 #
