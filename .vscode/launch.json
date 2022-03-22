@@ -1,0 +1,20 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "streamserv.py",
+            "type": "python",
+            "request": "launch",
+            "program": "c:\\Courses\\ACIT-1515\\musicstream\\streamserv.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [
+                "serv",
+                "-v"
+            ]
+        }
+    ]
+}

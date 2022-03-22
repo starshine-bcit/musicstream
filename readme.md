@@ -1,20 +1,39 @@
-Dependencies:
+# Streamserv Network Music Player
 
-eyeD3
-python-magic-bin (windows)
+## Introduction
 
-To Install:
+
+
+## Dependencies
+
+* Python3
+* eyeD3
+* python-magic-bin (windows)
+* aioquic
+
+aioquic requires openssl, see instructions [here](https://github.com/aiortc/aioquic)
+
+### To Install:
     pip install eyeD3
     pip install python-magic-bin
+    pip install aioquic
 
-streamserv invocation:
+### Create TLS cert
 
-    help:
-        py streamserv.py help
+    openssl req -new -newkey rsa:4096 -nodes -keyout private_key.txt -out csr.txt -subj "/C=CA/ST=Somwhere/L=SomeOtherPlace/O=starshine-bcit/CN=streamserv"
 
-    create the database:
-        py streamserv.py db create your/path/here
-            Note: path must be absolute
+    openssl x509 -req-sha256 -days 365 -in csr.txt -signkey private_key.txt  -out certificate.txt
 
-    db stats:
-        py streamserv.py db stats
+You should now have your own self-signed certificate and key, place them in ./cert
+
+## Server Invocation
+
+### help
+    py streamserv.py help
+
+### create database
+    py streamserv.py db create your/path/here
+        Note: path must be absolute
+
+### db stats
+    py streamserv.py db stats

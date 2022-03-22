@@ -44,8 +44,15 @@ def createdb(scanpath):
             tartist = id3.tag.artist
             talbum = id3.tag.album
 
-            insertstate = '''INSERT INTO songs (id, path, filename, length, mtime, title, artist, album)
-                                VALUES (?, ?, ?, ?, ?, ?, ?, ?);'''
+            insertstate = '''INSERT INTO songs (id, 
+                            path,
+                            filename,
+                            length,
+                            mtime,
+                            title,
+                            artist,
+                            album)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?);'''
 
             insertvals = (tid,
                           str(file),
