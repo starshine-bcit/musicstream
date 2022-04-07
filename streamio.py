@@ -2,7 +2,7 @@ from typing import Dict, Optional
 import logging
 import pathlib
 import asyncio
-import struct
+from construct import *
 
 from aioquic.asyncio import QuicConnectionProtocol, serve
 from aioquic.quic.configuration import QuicConfiguration
@@ -12,44 +12,35 @@ from aioquic.tls import SessionTicket
 
 
 class queryprot(QuicConnectionProtocol):
+    def __init__(self, logger):
+        self.cmdb = PaddedString(8, 'utf8')
+        self.logger = logger
+        self.qprot = Struct(
+            'count' / Int16ul,
+            'cmd' / Bytes(8),
+            'data' / Bytes(lambda this: this.count - this._subcons.cmd.sizeof() - this._subcons.count.sizeof())
+        )
+    def pack(self, cmd, output):
+        count = len(output) + 10
+        cmd = self.cmdb.build(cmd)
+        return self.qprot.build(dict(count=count, cmd=cmd, data=output))
+
+    def unpack(self, input):
+        upack = self.qprot.parse(input)
+        count = upack['count']
+        cmd = self.cmdb.parse(upack['cmd'])
+        data = upack['data']
+        return count, cmd , data
+
     def quic_event_received(self, event: QuicEvent):
         if isinstance(event, StreamDataReceived):
-            # parse query
-            query = struct.unpack('!c', bytes(event.data))[0]
-            #query = DNSRecord.parse(event.data[2 : 2 + length])
+            #unpack recieved data and print
+            count, cmd, data = self.unpack(event.data)
+            self.logger.debug(f'Data recieved: {count}, {cmd}, {data}')
 
-            # perform lookup and serialize answer
-            #data = query.send('where to send', 53)
-            data = struct.pack("!H", len(data)) + data
-
-            # send answer
-            self._quic.send_stream_data(event.stream_id, data, end_stream=True)
-    def parse(self, data):
-        pass
-
-        # from construct import *
-    
-    # myPascalString = Struct(
-    #     "length" / Int8ul,
-    #     "data" / Bytes(lambda ctx: ctx.length)
-    # )
-
-    # >>> myPascalString.parse(b'\x05helloXXX')
-    # Container(length=5, data=b'hello')
-    # >>> myPascalString.build(Container(length=6, data=b"foobar"))
-    # b'\x06foobar'
-
-
-    # myPascalString2 = ExprAdapter(myPascalString,
-    #     encoder=lambda obj, ctx: Container(length=len(obj), data=obj),
-    #     decoder=lambda obj, ctx: obj.data
-    # )
-
-    # >>> myPascalString2.parse(b"\x05hello")
-    # b'hello'
-
-    # >>> myPascalString2.build(b"i'm a long string")
-    # b"\x11i'm a long string"
+            #repack data and send it back
+            retquery = self.pack(cmd, data)
+            self._quic.send_stream_data(event.stream_id, retquery, end_stream=True)
 
 class SessionTicketStore:
     def __init__(self):
@@ -72,7 +63,8 @@ def initio(args):
     logger = QuicFileLogger(args.log)
 
     if args.secrets:
-        secrets_log_file = pathlib.Path.open(args.secrets, 'a')
+        secrets = pathlib.Path('./logs/secrets')
+        secrets_log_file = pathlib.Path.open(secrets, 'a')
     else:
         secrets_log_file = None
 
@@ -86,17 +78,17 @@ def initio(args):
 
     tstore = SessionTicketStore()
 
-    return conf, tstore
+    return conf, tstore, logger
 
 
-def listen(conf, tstore, args):
+def listen(conf, tstore, logger, args):
     loop = asyncio.get_event_loop()
     loop.run_until_complete(
         serve(
             args.interface,
             args.port,
             configuration=conf,
-            create_protocol=queryprot,
+            create_protocol=queryprot(logger),
             session_ticket_fetcher=tstore.pop,
             session_ticket_handler=tstore.add,
             retry=args.retry,

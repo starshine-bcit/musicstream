@@ -1,5 +1,4 @@
 
-import sys
 import pathlib
 import argparse
 import streamdb
@@ -10,14 +9,15 @@ DBLOC = pathlib.Path('streamserv.db')
 
 # General ToDo:
 #
-#
 # aioquic for networking
-#
+# protocol buffer (google)
+# error handling
+# add poetry
 #
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Music Database Management and Server")
+    parser = argparse.ArgumentParser(description='Music Database Management and Server')
 
     parser.add_argument(
         'run',
@@ -58,16 +58,18 @@ def main():
         '-l',
         '--log',
         type = pathlib.Path,
-        help = 'log quic events to a specified log file (defaults quic.log)',
-        default = pathlib.Path('./logs')
+        help = 'log quic events to a specified log file (defaults ./log)',
+        default = pathlib.Path('./logs/client')
     )
     parser.add_argument(
+        '-c',
         '--cert',
         type = pathlib.Path,
         help = 'certificate to load (default ./cert/certificate.txt)',
         default = pathlib.Path('./cert/certificate.txt')
     )
     parser.add_argument(
+        '-k',
         '--key',
         type = pathlib.Path,
         help = 'private key file to load (default ./cert/private_key.txt)',
@@ -77,7 +79,7 @@ def main():
         '-p',
         '--port',
         type = int,
-        help = 'specify a port to listen on, 50000+ (default 58743)',
+        help = 'port to listen on, 50000+ (default 58743)',
         default = 58743
     )
     parser.add_argument(
@@ -96,8 +98,9 @@ def main():
     )
     parser.add_argument(
         '--secrets',
-        type = pathlib.Path,
-        help = 'log secrets to a specified file, for debugging with wireshark'
+        action = 'store_true',
+        default = False,
+        help = 'logs secrets to /logs/secrets, for debugging with wireshark'
     )
 
     args = parser.parse_args()
@@ -119,9 +122,9 @@ def main():
             else:
                 print(f'Error: You cannot have database stats without a {DBLOC}')
     elif args.run == 'serv':
-        conf, tstore = streamio.initio(args)
+        conf, tstore, logger = streamio.initio(args)
         print('Initialization successfull, starting to listen...')
-        streamio.listen(conf, tstore, args)
+        streamio.listen(conf, tstore, logger, args)
 
 
 if __name__ == '__main__':
