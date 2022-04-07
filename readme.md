@@ -33,7 +33,12 @@ You should now have your own self-signed certificate and key, place them in ./ce
 
 ### create database
     py streamserv.py db create your/path/here
-        Note: path must be absolute
+        Note: path must be absolute, only works with MP3 files
 
 ### db stats
     py streamserv.py db stats
+
+### listen verbosely with defaults
+    py streamserv.py serv -v
+    
+    Note: requires a cert and key as outlined aboce
